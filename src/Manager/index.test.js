@@ -1,17 +1,10 @@
-const { Member } = require('uee')
+const { Member, Provider, EventFactory, Types } = require('uee')
 const { Manager } = require('./index')
 const { Ticker } = require('@ellementul/ueetimeticker')
 
 
 describe('Manager', () => {
   test('Constructor', () => {
-    const roles = [
-      {
-        role: "TestRole",
-        memberConstructor: Member
-      }
-    ]
-
     expect(() => {
       new Manager({ roles: "empty" })
     }).toThrowError("roles");
@@ -20,27 +13,36 @@ describe('Manager', () => {
       new Manager({ roles: [{ role: "const" }] })
     }).toThrowError("member constructor");
 
-    const manager = new Manager({ roles })
-    expect(manager).toBeDefined();
-  });
+    expect(() => {
+      new Manager({ 
+        provider: new Provider,
+        roles: [
+          {
+            role: "TestRole",
+            memberConstructor: Member
+          }
+        ]
+      })
+    }).toThrowError("ticker");
 
-  test('start manager without tiker role', () => {
     const manager = new Manager({ 
+      provider: new Provider,
       roles: [
         {
-          role: "TestRole",
-          memberConstructor: Member
+          role: "Ticker",
+          memberConstructor: Ticker
         }
       ]
     })
-
-    expect(() => {
-      manager.start()
-    }).toThrowError("ticker");
+    expect(manager).toBeDefined();
   });
 
   test('start manager with tiker role', () => {
-    const manager = new Manager({ 
+    jest.useFakeTimers();
+    const provider = new Provider
+    provider.setLogging(console.log)
+    const manager = new Manager({
+      provider,
       roles: [
         {
           role: "Ticker",
@@ -49,7 +51,12 @@ describe('Manager', () => {
       ]
     })
 
+    const callback = jest.fn()
+    manager.onEvent(require('../events/time_event'), callback)
+
     manager.start();
+    jest.runOnlyPendingTimers();
+    expect(callback).toHaveBeenCalled();
   });
 
   test('getting role', () => {
@@ -59,11 +66,12 @@ describe('Manager', () => {
 
     const roles = [
       {
-        role: "TestRole",
-        memberConstructor: Member
+        role: "Ticker",
+        memberConstructor: Ticker
       }
     ]
-    const manager = new Manager({ roles })
+    const provider = new Provider
+    const manager = new Manager({ provider, roles })
     const member = new Member
     const testMember = new TestMember
 

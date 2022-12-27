@@ -1,7 +1,8 @@
 const { Member } = require('uee')
+const startEvent = require('../events/start_event')
 
 class Manager extends Member {
-  constructor({ roles }) {
+  constructor({ provider, roles }) {
     super()
 
     if (!Array.isArray(roles) || roles.length < 1)
@@ -17,15 +18,25 @@ class Manager extends Member {
     roles.forEach(({role, memberConstructor}) => { 
       this._roles[role] = { memberConstructor }
     })
+
+    this.setProvider(provider)
+
+    if(!this._roles.Ticker)
+      throw new Error("The manager doesn't have ticker role!")
+    else
+      this.buildTicker(this._roles.Ticker.memberConstructor, provider)
+  }
+
+  buildTicker (Ticker, provider) {
+    const ticker = new Ticker
+    ticker.setProvider(provider)
   }
 
   start() {
-    if(!this._roles.Ticker)
-      throw new Error("The manager doesn't have ticker role!")
+    this.send(startEvent)
   }
 
   getRole(member) {
-    console.log(member)
     return member.role || member.constructor.name
   }
 }
