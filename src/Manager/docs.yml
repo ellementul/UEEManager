@@ -1,6 +1,6 @@
 Шаги:
-  - run ticker
-  - update member list eventis
+  - update member list events
+  - listen to connected memebr event
   - add task event
 
 Одиночная версия:

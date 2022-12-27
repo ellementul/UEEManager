@@ -1,5 +1,5 @@
-const { Member } = require('uee')
-const startEvent = require('../events/start_event')
+const { Member } = require('@ellementul/uee')
+const { startEvent } = require('@ellementul/ueetimeticker')
 
 class Manager extends Member {
   constructor({ provider, roles }) {
@@ -24,20 +24,16 @@ class Manager extends Member {
     if(!this._roles.Ticker)
       throw new Error("The manager doesn't have ticker role!")
     else
-      this.buildTicker(this._roles.Ticker.memberConstructor, provider)
+      this.buildTicker(this._roles.Ticker.memberConstructor)
   }
 
-  buildTicker (Ticker, provider) {
+  buildTicker (Ticker) {
     const ticker = new Ticker
-    ticker.setProvider(provider)
+    ticker.setProvider(this._provider)
   }
 
   start() {
     this.send(startEvent)
-  }
-
-  getRole(member) {
-    return member.role || member.constructor.name
   }
 }
 

@@ -20,7 +20,7 @@
     "jest": "^29.3.1"
   },
   "dependencies": {
-    "@ellementul/ueetimeticker": "^1.1.0",
-    "uee": "github:ellementul/UEE"
+    "@ellementul/ueetimeticker": "^1.1.2",
+    "@ellementul/uee": "^1.0.0"
   }
 }
