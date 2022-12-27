@@ -1,5 +1,6 @@
 const { Member, Provider } = require('@ellementul/uee')
-const { Ticker, timeEvent } = require('@ellementul/ueetimeticker')
+const updateListEvent = require('../events/update_list_event')
+const { Ticker } = require('@ellementul/ueetimeticker')
 const { Manager } = require('./index')
 
 describe('Manager', () => {
@@ -39,6 +40,9 @@ describe('Manager', () => {
   test('start manager with tiker role', () => {
     jest.useFakeTimers();
     const provider = new Provider
+    // provider.setLogging(({message}) => {
+    //   console.log(changeMemberEvent.isValid(message))
+    // })
     const manager = new Manager({
       provider,
       roles: [
@@ -50,10 +54,28 @@ describe('Manager', () => {
     })
 
     const callback = jest.fn()
-    manager.onEvent(timeEvent, callback)
+    manager.onEvent(updateListEvent, callback)
 
     manager.start();
     jest.runOnlyPendingTimers();
-    expect(callback).toHaveBeenCalled();
+    
+    expect(callback).toHaveBeenCalledWith({
+      system: "Cooperation",
+      entity: "MembersList",
+      state: "Updated",
+      roles: {
+        Manager: {
+          instances: {
+            [manager.uuid]: "Connected",
+          },
+        },
+        Ticker: {
+          instances: {
+            [manager.tickerUuid]: "Connected",
+          },
+        },
+      },
+      time: {},
+    });
   });
 });
