@@ -1,0 +1,26 @@
+{
+  "name": "ueemanager",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node node_modules/jest/bin/jest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ellementul/UEEManager.git"
+  },
+  "author": "Ellementul",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ellementul/UEEManager/issues"
+  },
+  "homepage": "https://github.com/ellementul/UEEManager#readme",
+  "devDependencies": {
+    "jest": "^29.3.1"
+  },
+  "dependencies": {
+    "@ellementul/ueetimeticker": "^1.1.0",
+    "uee": "github:ellementul/UEE"
+  }
+}
