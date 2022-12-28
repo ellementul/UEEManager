@@ -41,13 +41,20 @@ describe('Manager', () => {
   });
 
   test('start manager with tiker role', () => {
+    const fakeUuid = "fee40a3b-9812-45ec-a929-6bfe9ec2837d"
     const provider = new Provider
     const manager = new Manager({
       provider,
       roles: [
         {
           role: "Ticker",
-          memberConstructor: Ticker
+          memberConstructor: (class TestTicker extends Ticker {
+            constructor() {
+              super()
+              this.role = "Ticker"
+              this._uuid = fakeUuid
+            }
+          })
         }
       ]
     })
@@ -64,13 +71,17 @@ describe('Manager', () => {
       state: "Updated",
       roles: {
         Manager: {
-          instances: {
+          managers: {},
+          statuses: {
             [manager.uuid]: "Connected",
           },
         },
         Ticker: {
-          instances: {
-            [manager.tickerUuid]: "Connected",
+          managers: {
+            [fakeUuid]: manager.uuid,
+          },
+          statuses: {
+            [fakeUuid]: "Connected",
           },
         }
       },

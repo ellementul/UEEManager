@@ -20,13 +20,17 @@ class Manager extends Member {
     this._roles = {
       [this.getRole()]: {
         memberConstructor: Manager,
-        instances: new Map
+        managers: new Map,
+        statuses: new Map,
+        instances: new Map([[this.uuid, this]])
       }
     }
 
     roles.forEach(({role, memberConstructor}) => { 
       this._roles[role] = { 
         memberConstructor,
+        managers: new Map,
+        statuses: new Map,
         instances: new Map
       }
     })
@@ -42,24 +46,26 @@ class Manager extends Member {
 
   buildTicker (Ticker) {
     const ticker = new Ticker
-    this.onEvent(timeEvent, payload => this.updateMembersList(payload))
+    this.onEvent(timeEvent, payload => this.sendMembersList(payload))
     ticker.setProvider(this._provider)
 
-    return ticker.uuid
+    this._roles[ticker.getRole()].instances.set(ticker.uuid, ticker)
+    this._roles[ticker.getRole()].managers.set(ticker.uuid, this.uuid)
   }
 
   updateMembersStatus ({ state, role, uuid }) {
     if(!this._roles[role])
       throw new TypeError(`Unknowed role: ${role}!`)
 
-    this._roles[role].instances.set(uuid, state)
+    this._roles[role].statuses.set(uuid, state)
   }
 
-  updateMembersList ({ state }) {
+  sendMembersList ({ state }) {
     const roles = {}
     for (let role in this._roles) {
       roles[role] = {
-        instances: Object.fromEntries(this._roles[role].instances)
+        managers: Object.fromEntries(this._roles[role].managers),
+        statuses: Object.fromEntries(this._roles[role].statuses)
       }
     }
     this.send(updateListEvent, {
@@ -69,8 +75,17 @@ class Manager extends Member {
 
   start() {
     this.onEvent(updateListEvent, payload => this.checkMembers(payload))
+    this.onEvent(updateListEvent, payload => this.updateMembers(payload))
     this.onEvent(createMemberEvent, payload => this.createMember(payload))
     this.send(startEvent)
+  }
+
+  updateMembers({ roles }) {
+    for (let role in roles) {
+      for (let uuid in roles[role].managers) {
+        this._roles[role].managers.set(uuid, roles[role].managers[uuid])
+      }
+    }
   }
 
   checkMembers({ roles }) {
@@ -92,6 +107,8 @@ class Manager extends Member {
     const memberConstructor = this._roles[role].memberConstructor
     const member = new memberConstructor
     member.setProvider(this._provider)
+    this._roles[role].instances.set(member.uuid, member)
+    this._roles[role].managers.set(member.uuid, this.uuid)
   }
 
   // reset() {
