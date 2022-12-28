@@ -78,7 +78,7 @@ describe('Manager', () => {
         },
         Ticker: {
           managers: {
-            [fakeUuid]: manager.uuid,
+            [fakeUuid]: "Connected",
           },
           statuses: {
             [fakeUuid]: "Connected",
@@ -90,30 +90,30 @@ describe('Manager', () => {
 
   });
 
-  // test.only('destroy manager', () => {
-  //   jest.useFakeTimers();
-  //   const provider = new Provider
-  //   const manager = new Manager({
-  //     provider,
-  //     roles: [
-  //       {
-  //         role: "Ticker",
-  //         memberConstructor: Ticker
-  //       }
-  //     ]
-  //   })
+  test.only('reset manager', () => {
+    jest.useFakeTimers();
+    const provider = new Provider
+    const manager = new Manager({
+      provider,
+      roles: [
+        {
+          role: "Ticker",
+          memberConstructor: Ticker
+        }
+      ]
+    })
 
-  //   const callback = jest.fn(() => {
-  //     manager.reset()
-  //   })
-  //   manager.onEvent(updateListEvent, callback)
+    const callback = jest.fn(() => {
+      manager.reset()
+    })
+    manager.onEvent(updateListEvent, callback)
 
-  //   manager.start();
-  //   jest.runOnlyPendingTimers();
-  //   jest.runOnlyPendingTimers();
+    manager.start();
+    jest.runOnlyPendingTimers();
+    jest.runOnlyPendingTimers();
     
-  //   expect(callback).toHaveBeenCalledTimes(1);
-  // });
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
 
   test('add task event', () => {
     const provider = new Provider

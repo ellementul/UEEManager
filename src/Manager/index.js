@@ -111,14 +111,15 @@ class Manager extends Member {
     this._roles[role].managers.set(member.uuid, this.uuid)
   }
 
-  // reset() {
-  //   for (let role in roles) {
-  //     const instances = this._roles[role].instances
-  //     if (instances.size === 0) {
-        
-  //     }
-  //   }
-  // }
+  reset() {
+    for (let role in this._roles) {
+      if (role !== this.getRole())
+        for (let [uuid, instance] of this._roles[role].instances) {
+          if(typeof instance.reset == "function")
+            instance.reset()
+        }
+    }
+  }
 }
 
 module.exports = { Manager }
