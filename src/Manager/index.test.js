@@ -1,7 +1,9 @@
 const { Member, Provider } = require('@ellementul/uee')
-const updateListEvent = require('../events/update_list_event')
 const { Ticker } = require('@ellementul/ueetimeticker')
 const { Manager } = require('./index')
+
+const updateListEvent = require('../events/update_list_event')
+const addTaskEvent = require('../events/add_task_event')
 
 describe('Manager', () => {
   test('Constructor', () => {
@@ -40,9 +42,6 @@ describe('Manager', () => {
   test('start manager with tiker role', () => {
     jest.useFakeTimers();
     const provider = new Provider
-    // provider.setLogging(({message}) => {
-    //   console.log(changeMemberEvent.isValid(message))
-    // })
     const manager = new Manager({
       provider,
       roles: [
@@ -73,9 +72,74 @@ describe('Manager', () => {
           instances: {
             [manager.tickerUuid]: "Connected",
           },
-        },
+        }
       },
       time: {},
+    });
+
+  });
+
+  test('add task event', () => {
+    jest.useFakeTimers();
+    const provider = new Provider
+    const manager = new Manager({
+      provider,
+      roles: [
+        {
+          role: "Ticker",
+          memberConstructor: Ticker
+        },
+        {
+          role: "LocalMember",
+          memberConstructor: (class LocalMember extends Member {})
+        }
+      ]
+    })
+
+    const callback = jest.fn()
+    manager.onEvent(addTaskEvent, callback)
+
+    manager.start();
+    jest.runOnlyPendingTimers();
+    
+    expect(callback).toHaveBeenCalledWith({
+      system: "Management",
+      entity: "Task",
+      state: "Added",
+      action: "CreateMemeber",
+      role: "LocalMember"
+    });
+  });
+
+  test('running local member', () => {
+    jest.useFakeTimers();
+    const provider = new Provider
+    const manager = new Manager({
+      provider,
+      roles: [
+        {
+          role: "Ticker",
+          memberConstructor: Ticker
+        },
+        {
+          role: "LocalMember",
+          memberConstructor: (class LocalMember extends Member {})
+        }
+      ]
+    })
+
+    const callback = jest.fn()
+    manager.onEvent(addTaskEvent, callback)
+
+    manager.start();
+    jest.runOnlyPendingTimers();
+    
+    expect(callback).toHaveBeenCalledWith({
+      system: "Management",
+      entity: "Task",
+      state: "Added",
+      action: "CreateMemeber",
+      role: "LocalMember"
     });
   });
 });

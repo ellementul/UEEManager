@@ -1,6 +1,8 @@
 const { Member, events: { change: changeMemberEvent } } = require('@ellementul/uee')
 const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
+
 const updateListEvent = require('../events/update_list_event')
+const createMemberEvent = require('../events/create_member_event')
 
 class Manager extends Member {
   constructor({ provider, roles }) {
@@ -66,7 +68,20 @@ class Manager extends Member {
   }
 
   start() {
+    this.onEvent(updateListEvent, payload => this.checkMembers(payload))
     this.send(startEvent)
+  }
+
+  checkMembers({ roles }) {
+    for (let role in roles) {
+      const instances = this._roles[role].instances
+      if (instances.size === 0) {
+        this.send(createMemberEvent, {
+          role
+        })
+        break;
+      }
+    }
   }
 }
 
