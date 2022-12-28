@@ -69,6 +69,7 @@ class Manager extends Member {
 
   start() {
     this.onEvent(updateListEvent, payload => this.checkMembers(payload))
+    this.onEvent(createMemberEvent, payload => this.createMember(payload))
     this.send(startEvent)
   }
 
@@ -83,6 +84,24 @@ class Manager extends Member {
       }
     }
   }
+
+  createMember({ role }) {
+    if(!this._roles[role])
+      throw new TypeError(`Unknowed role: ${role}!`)
+
+    const memberConstructor = this._roles[role].memberConstructor
+    const member = new memberConstructor
+    member.setProvider(this._provider)
+  }
+
+  // reset() {
+  //   for (let role in roles) {
+  //     const instances = this._roles[role].instances
+  //     if (instances.size === 0) {
+        
+  //     }
+  //   }
+  // }
 }
 
 module.exports = { Manager }
