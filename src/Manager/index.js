@@ -37,16 +37,11 @@ class Manager extends Member {
 
     this.onEvent(changeMemberEvent, payload => this.updateMembersStatus(payload))
     this.setProvider(provider)
-
-    if(!this._roles.Ticker)
-      throw new Error("The manager doesn't have ticker role!")
-    else
-      this.tickerUuid = this.buildTicker(this._roles.Ticker.memberConstructor)
   }
 
   buildTicker (Ticker) {
     const ticker = new Ticker
-    this.onEvent(timeEvent, payload => this.sendMembersList(payload))
+    
     ticker.setProvider(this._provider)
 
     this._roles[ticker.getRole()].instances.set(ticker.uuid, ticker)
@@ -74,9 +69,17 @@ class Manager extends Member {
   }
 
   start() {
-    this.onEvent(updateListEvent, payload => this.checkMembers(payload))
-    this.onEvent(updateListEvent, payload => this.updateMembers(payload))
+    this.onEvent(updateListEvent, payload => {
+      this.updateMembers(payload)
+      this.checkMembers()
+    })
     this.onEvent(createMemberEvent, payload => this.createMember(payload))
+    
+    if(this._roles.Ticker) {
+      this.createMember({ role: "Ticker" })
+      this.onEvent(timeEvent, payload => this.sendMembersList(payload))
+    }
+
     this.send(startEvent)
   }
 
@@ -88,14 +91,13 @@ class Manager extends Member {
     }
   }
 
-  checkMembers({ roles }) {
-    for (let role in roles) {
+  checkMembers() {
+    for (let role in this._roles) {
       const instances = this._roles[role].instances
       if (instances.size === 0) {
         this.send(createMemberEvent, {
           role
         })
-        break;
       }
     }
   }
