@@ -1,3 +1,5 @@
+const getUuid = require('uuid-by-string');
+
 const { 
   Member, 
   Provider, 
@@ -10,6 +12,15 @@ const { Manager } = require('./index')
 
 const updateListEvent = require('../events/update_list_event')
 const addTaskEvent = require('../events/add_task_event')
+
+
+const generateUuid = (function () {
+  let genUuid = "11111111-0000-0000-0000-000000000000"
+  return () => {
+    genUuid = getUuid(genUuid)
+    return genUuid
+  }
+})()
 
 describe('Manager', () => {
   test('Constructor', () => {
@@ -58,7 +69,7 @@ describe('Manager', () => {
 
     const updateListCallback = jest.fn()
     provider.onEvent(updateListEvent, updateListCallback)
-    
+
     manager.send(timeEvent)
     
     expect(updateListCallback).toHaveBeenCalledWith({
@@ -117,42 +128,102 @@ describe('Manager', () => {
       entity: "Task",
       state: "Added",
       action: "CreateMember",
-      role: "Member"
+      role: "Member",
+      manager: manager.uuid
+    });
+  });
+});
+
+describe('Two mangers', () => {
+  test('run assistant', () => {
+    const fakeUuid = "fee40a3b-9812-45ec-a929-6bfe9ec2837d"
+    const roles = [
+      {
+        role: "Ticker",
+        memberConstructor: class fakeTicker extends Member {
+          constructor(){
+            super()
+            this._uuid = fakeUuid
+            this.role = "Ticker"
+          }
+        }
+      }
+    ]
+
+    const provider = new Provider
+    const manager = new Manager({ provider, roles })
+    const assistant = new Manager({ provider, roles })
+
+    const startTickerCallback = jest.fn()
+    provider.onEvent(startEvent, startTickerCallback)
+
+    manager.start()
+    assistant.start(true)
+    manager.send(timeEvent)
+
+    const updateListCallback = jest.fn()
+    provider.onEvent(updateListEvent, updateListCallback)
+
+    manager.send(timeEvent)
+
+    expect(updateListCallback).toHaveBeenCalledTimes(2);
+    expect(updateListCallback).toHaveBeenCalledWith({
+      system: "Cooperation",
+      entity: "MembersList",
+      state: "Updated",
+      roles: {
+        Manager: {
+          managers: {},
+          statuses: {
+            [manager.uuid]: "Connected",
+            [assistant.uuid]: "Connected",
+          },
+        },
+        Ticker: {
+          managers: {
+            [fakeUuid]: manager.uuid,
+          },
+          statuses: {
+            [fakeUuid]: "Connected",
+          },
+        }
+      },
+      time: {},
     });
   });
 
-  test('running local member', () => {
+  test('running single member', () => {
     const fakeTickerUuid = "fee40a3b-9812-45ec-a929-6bfe9ec2837d"
-    const fakeMemberUuid = "11111111-9812-45ec-a929-6bfe9ec2837d"
-    const provider = new Provider
-    provider.setLogging(({ message }) => console.log(message))
-    const manager = new Manager({
-      provider,
-      roles: [
-        {
-          role: "Ticker",
-          memberConstructor: class fakeTicker extends Member {
-            constructor(){
-              super()
-              this._uuid = fakeTickerUuid
-              this.role = "Ticker"
-            }
-          }
-        },
-        {
-          role: "Member",
-          memberConstructor: class fakeMember extends Member {
-            constructor(){
-              super()
-              this._uuid = fakeMemberUuid
-              this.role = "Member"
-            }
+    const roles = [
+      {
+        role: "Ticker",
+        memberConstructor: class fakeTicker extends Member {
+          constructor(){
+            super()
+            this._uuid = fakeTickerUuid
+            this.role = "Ticker"
           }
         }
-      ]
-    })
+      },
+      {
+        role: "Member",
+        memberConstructor: class fakeMember extends Member {
+          constructor(){
+            super()
+            this._uuid = generateUuid()
+            this.role = "Member"
+          }
+        }
+      }
+    ]
+
+    const provider = new Provider
+    provider.setLogging(({ message }) => console.log(message))
+    const manager = new Manager({ provider, roles })
+    const assistant = new Manager({ provider, roles })
 
     manager.start()
+    assistant.start(true)
     manager.send(timeEvent)
 
     const updateListCallback = jest.fn()
@@ -169,6 +240,7 @@ describe('Manager', () => {
           managers: {},
           statuses: {
             [manager.uuid]: "Connected",
+            [assistant.uuid]: "Connected",
           },
         },
         Ticker: {
@@ -181,10 +253,84 @@ describe('Manager', () => {
         },
         Member: {
           managers: {
-            [fakeMemberUuid]: manager.uuid,
+            "f0399e9e-4527-5f29-a765-a337f4a365c0": manager.uuid
           },
           statuses: {
-            [fakeMemberUuid]: "Connected",
+            "f0399e9e-4527-5f29-a765-a337f4a365c0": "Connected",
+          },
+        }
+      },
+      time: {},
+    });
+  });
+
+  test('running local member', () => {
+    const fakeTickerUuid = "fee40a3b-9812-45ec-a929-6bfe9ec2837d"
+    const roles = [
+      {
+        role: "Ticker",
+        memberConstructor: class fakeTicker extends Member {
+          constructor(){
+            super()
+            this._uuid = fakeTickerUuid
+            this.role = "Ticker"
+          }
+        }
+      },
+      {
+        role: "Member",
+        memberConstructor: class fakeMember extends Member {
+          constructor(){
+            super()
+            this._uuid = generateUuid()
+            this.role = "Member"
+          }
+        },
+        local: true
+      }
+    ]
+
+    const provider = new Provider
+    const manager = new Manager({ provider, roles })
+    const assistant = new Manager({ provider, roles })
+
+    manager.start()
+    assistant.start(true)
+    manager.send(timeEvent)
+
+    const updateListCallback = jest.fn()
+    provider.onEvent(updateListEvent, updateListCallback)
+
+    manager.send(timeEvent)
+
+    expect(updateListCallback).toHaveBeenCalledWith({
+      system: "Cooperation",
+      entity: "MembersList",
+      state: "Updated",
+      roles: {
+        Manager: {
+          managers: {},
+          statuses: {
+            [manager.uuid]: "Connected",
+            [assistant.uuid]: "Connected",
+          },
+        },
+        Ticker: {
+          managers: {
+            [fakeTickerUuid]: manager.uuid,
+          },
+          statuses: {
+            [fakeTickerUuid]: "Connected",
+          },
+        },
+        Member: {
+          managers: {
+            "b4d2bbfd-2bd4-578f-b7a5-3cbfa2055c0e": manager.uuid,
+            "28a30282-0ae0-5653-95cd-26b9daeb7fc8": assistant.uuid
+          },
+          statuses: {
+            "b4d2bbfd-2bd4-578f-b7a5-3cbfa2055c0e": "Connected",
+            "28a30282-0ae0-5653-95cd-26b9daeb7fc8": "Connected"
           },
         }
       },

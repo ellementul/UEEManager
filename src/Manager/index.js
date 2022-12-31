@@ -26,8 +26,9 @@ class Manager extends Member {
       }
     }
 
-    roles.forEach(({role, memberConstructor}) => { 
+    roles.forEach(({role, memberConstructor, local = false }) => { 
       this._roles[role] = { 
+        local,
         memberConstructor,
         managers: new Map,
         statuses: new Map,
@@ -68,19 +69,23 @@ class Manager extends Member {
     })
   }
 
-  start() {
+  start(assistant = false) {
+    this.isAssistantMode = !!assistant
+
     this.onEvent(updateListEvent, payload => {
       this.updateMembers(payload)
-      this.checkMembers()
+      if(!this.isAssistantMode) 
+        this.checkMembers()
     })
     this.onEvent(createMemberEvent, payload => this.createMember(payload))
+    this.onEvent(timeEvent, payload => this.sendMembersList(payload))
     
-    if(this._roles.Ticker) {
-      this.createMember({ role: "Ticker" })
-      this.onEvent(timeEvent, payload => this.sendMembersList(payload))
-    }
+    if(!this.isAssistantMode) {
+      if(this._roles.Ticker)
+        this.createMember({ manager: this.uuid, role: "Ticker" })
 
-    this.send(startEvent)
+      this.send(startEvent)
+    }
   }
 
   updateMembers({ roles }) {
@@ -93,16 +98,37 @@ class Manager extends Member {
 
   checkMembers() {
     for (let role in this._roles) {
-      const instances = this._roles[role].instances
-      if (instances.size === 0) {
-        this.send(createMemberEvent, {
-          role
-        })
-      }
+      if(this._roles[role].local)
+        this.taskRunLocal({ role })
+      else
+        this.taskRunSingle({ role })
     }
   }
 
-  createMember({ role }) {
+  taskRunSingle({ role }) {
+    if (this._roles[role].statuses.size === 0)
+      this.send(createMemberEvent, {
+        manager: this.uuid,
+        role
+      })
+  }
+
+  taskRunLocal({ role }) {
+    const managers = this._roles[this.getRole()].statuses.keys()
+    for (let manager of managers)
+      this.send(createMemberEvent, {
+        manager,
+        role
+      })
+  }
+
+  createMember({ manager, role }) {
+    if(manager != this.uuid) return
+
+    const isInstance = [...this._roles[role].managers.values()]
+      .some(currentManager => currentManager === manager)
+    if (isInstance) return
+
     if(!this._roles[role])
       throw new TypeError(`Unknowed role: ${role}!`)
 
