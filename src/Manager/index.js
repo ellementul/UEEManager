@@ -5,7 +5,7 @@ const updateListEvent = require('../events/update_list_event')
 const createMemberEvent = require('../events/create_member_event')
 
 class Manager extends Member {
-  constructor({ provider, roles }) {
+  constructor({ roles }) {
     super()
 
     if (!Array.isArray(roles) || roles.length < 1)
@@ -37,16 +37,6 @@ class Manager extends Member {
     })
 
     this.onEvent(changeMemberEvent, payload => this.updateMembersStatus(payload))
-    this.setProvider(provider)
-  }
-
-  buildTicker (Ticker) {
-    const ticker = new Ticker
-    
-    ticker.setProvider(this._provider)
-
-    this._roles[ticker.getRole()].instances.set(ticker.uuid, ticker)
-    this._roles[ticker.getRole()].managers.set(ticker.uuid, this.uuid)
   }
 
   updateMembersStatus ({ state, role, uuid }) {
@@ -70,6 +60,9 @@ class Manager extends Member {
   }
 
   start(assistant = false) {
+    if(!this._provider)
+      throw new TypeError("The manger doesn't have provider!")
+
     this.isAssistantMode = !!assistant
 
     this.onEvent(updateListEvent, payload => {

@@ -1,12 +1,6 @@
 const getUuid = require('uuid-by-string');
 
-const { 
-  Member, 
-  Provider, 
-  events: { 
-    connect: connectMemberEvent,
-    change: changeMemberEvent
-  } } = require('@ellementul/uee')
+const { Member, Provider } = require('@ellementul/uee')
 const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
 const { Manager } = require('./index')
 
@@ -32,8 +26,7 @@ describe('Manager', () => {
       new Manager({ roles: [{ role: "const" }] })
     }).toThrowError("member constructor");
 
-    const manager = new Manager({ 
-      provider: new Provider,
+    const manager = new Manager({
       roles: [
         {
           role: "TestRole",
@@ -44,11 +37,25 @@ describe('Manager', () => {
     expect(manager).toBeDefined();
   });
 
+  test('start manager without provider', () => {
+    const manager = new Manager({
+      roles: [
+        {
+          role: "Ticker",
+          memberConstructor: Member
+        }
+      ]
+    })
+
+    expect(() => {
+      manager.start()
+    }).toThrowError("provider");
+  });
+
   test('start manager with tiker role', () => {
     const fakeUuid = "fee40a3b-9812-45ec-a929-6bfe9ec2837d"
     const provider = new Provider
     const manager = new Manager({
-      provider,
       roles: [
         {
           role: "Ticker",
@@ -65,6 +72,7 @@ describe('Manager', () => {
     const startTickerCallback = jest.fn()
     provider.onEvent(startEvent, startTickerCallback)
 
+    manager.setProvider(provider)
     manager.start();
 
     const updateListCallback = jest.fn()
@@ -99,7 +107,6 @@ describe('Manager', () => {
   test('add task event', () => {
     const provider = new Provider
     const manager = new Manager({
-      provider,
       roles: [
         {
           role: "Ticker",
@@ -120,6 +127,7 @@ describe('Manager', () => {
     const callback = jest.fn()
     manager.onEvent(addTaskEvent, callback)
 
+    manager.setProvider(provider)
     manager.start()
     manager.send(timeEvent)
 
@@ -151,12 +159,14 @@ describe('Two mangers', () => {
     ]
 
     const provider = new Provider
-    const manager = new Manager({ provider, roles })
-    const assistant = new Manager({ provider, roles })
+    const manager = new Manager({ roles })
+    const assistant = new Manager({ roles })
 
     const startTickerCallback = jest.fn()
     provider.onEvent(startEvent, startTickerCallback)
 
+    manager.setProvider(provider)
+    assistant.setProvider(provider)
     manager.start()
     assistant.start(true)
     manager.send(timeEvent)
@@ -219,9 +229,11 @@ describe('Two mangers', () => {
 
     const provider = new Provider
     provider.setLogging(({ message }) => console.log(message))
-    const manager = new Manager({ provider, roles })
-    const assistant = new Manager({ provider, roles })
+    const manager = new Manager({ roles })
+    const assistant = new Manager({ roles })
 
+    manager.setProvider(provider)
+    assistant.setProvider(provider)
     manager.start()
     assistant.start(true)
     manager.send(timeEvent)
@@ -291,9 +303,11 @@ describe('Two mangers', () => {
     ]
 
     const provider = new Provider
-    const manager = new Manager({ provider, roles })
-    const assistant = new Manager({ provider, roles })
+    const manager = new Manager({ roles })
+    const assistant = new Manager({ roles })
 
+    manager.setProvider(provider)
+    assistant.setProvider(provider)
     manager.start()
     assistant.start(true)
     manager.send(timeEvent)
