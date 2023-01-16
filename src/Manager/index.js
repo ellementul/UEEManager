@@ -108,11 +108,15 @@ class Manager extends Member {
 
   taskRunLocal({ role }) {
     const managers = this._roles[this.getRole()].statuses.keys()
+
+    const existedMemebersWihtManagers = [...this._roles[role].managers.values()]
+    console.log(role, existedMemebersWihtManagers)
     for (let manager of managers)
-      this.send(createMemberEvent, {
-        manager,
-        role
-      })
+      if(!existedMemebersWihtManagers.includes(manager))
+        this.send(createMemberEvent, {
+          manager,
+          role
+        })
   }
 
   createMember({ manager, role }) {

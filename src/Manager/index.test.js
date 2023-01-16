@@ -228,7 +228,6 @@ describe('Two mangers', () => {
     ]
 
     const provider = new Provider
-    provider.setLogging(({ message }) => console.log(message))
     const manager = new Manager({ roles })
     const assistant = new Manager({ roles })
 
@@ -303,6 +302,7 @@ describe('Two mangers', () => {
     ]
 
     const provider = new Provider
+    // provider.setLogging(({ message }) => console.log(message))
     const manager = new Manager({ roles })
     const assistant = new Manager({ roles })
 
@@ -310,6 +310,10 @@ describe('Two mangers', () => {
     assistant.setProvider(provider)
     manager.start()
     assistant.start(true)
+
+    const addTaskCallback = jest.fn()
+    provider.onEvent(addTaskEvent, addTaskCallback)
+
     manager.send(timeEvent)
 
     const updateListCallback = jest.fn()
@@ -317,6 +321,7 @@ describe('Two mangers', () => {
 
     manager.send(timeEvent)
 
+    expect(addTaskCallback).toHaveBeenCalledTimes(2)
     expect(updateListCallback).toHaveBeenCalledWith({
       system: "Cooperation",
       entity: "MembersList",
