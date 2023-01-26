@@ -4,8 +4,10 @@ const { Member, Provider } = require('@ellementul/uee')
 const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
 const { Manager } = require('./index')
 
-const updateListEvent = require('../events/update_list_event')
 const addTaskEvent = require('../events/add_task_event')
+const updateListEvent = require('../events/update_list_event')
+const readyEvent = require('../events/all_members_ready_event')
+
 
 
 const generateUuid = (function () {
@@ -165,6 +167,9 @@ describe('Two mangers', () => {
     const startTickerCallback = jest.fn()
     provider.onEvent(startEvent, startTickerCallback)
 
+    const readyCallback = jest.fn()
+    provider.onEvent(readyEvent, readyCallback)
+
     manager.setProvider(provider)
     assistant.setProvider(provider)
     manager.start()
@@ -200,6 +205,8 @@ describe('Two mangers', () => {
       },
       time: {},
     });
+
+    expect(readyCallback).toHaveBeenCalledTimes(1);
   });
 
   test('running single member', () => {
@@ -306,6 +313,9 @@ describe('Two mangers', () => {
     const manager = new Manager({ roles })
     const assistant = new Manager({ roles })
 
+    const readyCallback = jest.fn()
+    provider.onEvent(readyEvent, readyCallback)
+
     manager.setProvider(provider)
     assistant.setProvider(provider)
     manager.start()
@@ -355,5 +365,7 @@ describe('Two mangers', () => {
       },
       time: {},
     });
+
+    expect(readyCallback).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,10 +1,3 @@
-Шаги:
-  - перенести все ненужные фалы в следующие три пакета:
-    - сервер
-    - клиент
-    - транспорт
-
-
 Обязаности manager:
 - сихронизация и составления списка всех members
 - постановка задчи запуска или остонова конкретного участника
@@ -16,3 +9,13 @@
     - его uuid
     - его настройки репликации
  - метку времени
+
+Members Replication:
+- Single - One instance of member to one environment
+- Local - One instance of member to one manager
+
+Events of manager:
+- Add creating member task
+- Update members list
+- All members are ready
+

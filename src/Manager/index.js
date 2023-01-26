@@ -1,8 +1,9 @@
 const { Member, events: { change: changeMemberEvent } } = require('@ellementul/uee')
 const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
 
-const updateListEvent = require('../events/update_list_event')
 const createMemberEvent = require('../events/create_member_event')
+const updateListEvent = require('../events/update_list_event')
+const readyEvent = require('../events/all_members_ready_event')
 
 class Manager extends Member {
   constructor({ roles }) {
@@ -37,6 +38,8 @@ class Manager extends Member {
     })
 
     this.onEvent(changeMemberEvent, payload => this.updateMembersStatus(payload))
+    
+    this._state = "Initialized"
   }
 
   updateMembersStatus ({ state, role, uuid }) {
@@ -90,33 +93,58 @@ class Manager extends Member {
   }
 
   checkMembers() {
+    let taskToRun = []
     for (let role in this._roles) {
-      if(this._roles[role].local)
-        this.taskRunLocal({ role })
-      else
-        this.taskRunSingle({ role })
+      taskToRun = taskToRun.concat(this.checkMember(role))
+    }
+
+    if(taskToRun.length > 0)
+      taskToRun.forEach(task => this.send(createMemberEvent, task))
+    else if(this._state == "Initialized") {
+      this.send(readyEvent)
+      this._state = "Ready"
     }
   }
 
-  taskRunSingle({ role }) {
+  checkMember(role) {
+    if(this._roles[role].local)
+      return this.taskRunLocal({ role })
+    else
+      return this.checkSingleMember(role)
+  }
+
+  checkSingleMember(role) {
     if (this._roles[role].statuses.size === 0)
-      this.send(createMemberEvent, {
+      return [{
         manager: this.uuid,
         role
-      })
+      }]
+    else
+      return []
   }
 
   taskRunLocal({ role }) {
-    const managers = this._roles[this.getRole()].statuses.keys()
+    const managers = this.getManagers()
+    const existedMembersWithManagers = this.getExistsManagersForRole(role)
 
-    const existedMemebersWihtManagers = [...this._roles[role].managers.values()]
-    console.log(role, existedMemebersWihtManagers)
-    for (let manager of managers)
-      if(!existedMemebersWihtManagers.includes(manager))
-        this.send(createMemberEvent, {
-          manager,
-          role
-        })
+    const managersToRunMember = managers.filter( manager => {
+      return !existedMembersWithManagers.includes(manager)
+    })
+    const tasksToRun = managersToRunMember.map(manager => {
+      return {
+        manager,
+        role
+      }
+    })
+
+    return tasksToRun
+  }
+
+  getManagers() {
+    return [...this._roles[this.getRole()].statuses.keys()]
+  }
+  getExistsManagersForRole(role) {
+    return [...this._roles[role].managers.values()]
   }
 
   createMember({ manager, role }) {
