@@ -167,6 +167,7 @@ class Manager extends Member {
 
     const memberConstructor = this._roles[role].memberConstructor
     const member = new memberConstructor
+    member.role = role
     member.setProvider(this._provider)
     this._roles[role].instances.set(member.uuid, member)
     this._roles[role].managers.set(member.uuid, this.uuid)
