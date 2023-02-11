@@ -1,5 +1,11 @@
-const { Member, events: { change: changeMemberEvent } } = require('@ellementul/uee')
-const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
+const { 
+  Member, 
+  events: { change: changeMemberEvent } 
+} = require('@ellementul/uee-core')
+
+const { 
+  events: { start: startEvent, time: timeEvent } 
+} = require('@ellementul/uee-timeticker')
 
 const createMemberEvent = require('../events/create_member_event')
 const updateListEvent = require('../events/update_list_event')
@@ -8,6 +14,8 @@ const readyEvent = require('../events/all_members_ready_event')
 class Manager extends Member {
   constructor({ roles }) {
     super()
+
+    this.role = "Manager"
 
     if (!Array.isArray(roles) || roles.length < 1)
       throw new TypeError("The roles canot be empty!")

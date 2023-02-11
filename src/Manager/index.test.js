@@ -1,7 +1,7 @@
 const getUuid = require('uuid-by-string');
 
-const { Member, Provider } = require('@ellementul/uee')
-const { startEvent, timeEvent } = require('@ellementul/ueetimeticker')
+const { Member, Provider } = require('@ellementul/uee-core')
+const { events: { start: startEvent, time: timeEvent } } = require('@ellementul/uee-timeticker')
 const { Manager } = require('./index')
 
 const addTaskEvent = require('../events/add_task_event')
@@ -309,7 +309,7 @@ describe('Two mangers', () => {
     ]
 
     const provider = new Provider
-    // provider.setLogging(({ message }) => console.log(message))
+    provider.setLogging(({ message }) => console.log(message))
     const manager = new Manager({ roles })
     const assistant = new Manager({ roles })
 

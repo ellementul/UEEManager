@@ -1,4 +1,4 @@
-const { EventFactory, Types } = require('@ellementul/uee')
+const { EventFactory, Types } = require('@ellementul/uee-core')
 const type = Types.Object.Def({
   system: "Management",
   entity: "Task",
