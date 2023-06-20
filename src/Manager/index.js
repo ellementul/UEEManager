@@ -75,9 +75,10 @@ class Manager extends Member {
     this.isAssistantMode = !!assistant
 
     this.onEvent(updateListEvent, payload => {
-      this.updateMembers(payload)
-      if(!this.isAssistantMode) 
+      if(!this.isAssistantMode) {
+        this.updateMembers(payload)
         this.checkMembers()
+      }
     })
     this.onEvent(createMemberEvent, payload => this.createMember(payload))
     this.onEvent(timeEvent, payload => this.sendMembersList(payload))
