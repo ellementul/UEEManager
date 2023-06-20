@@ -51,10 +51,8 @@ class Manager extends Member {
   }
 
   updateMembersStatus ({ state, role, uuid }) {
-    if(!this._roles[role])
-      throw new TypeError(`Unknowed role: ${role}!`)
-
-    this._roles[role].statuses.set(uuid, state)
+    if(this._roles[role])
+      this._roles[role].statuses.set(uuid, state)
   }
 
   sendMembersList ({ state }) {
