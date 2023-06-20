@@ -70,4 +70,3 @@ describe('Manager', () => {
     expect(readyCallback).toHaveBeenCalledTimes(1)
   });
 });
-
