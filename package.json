@@ -1,6 +1,6 @@
 {
-  "name": "@ellementul/uee-manager",
-  "version": "0.9.4",
+  "name": "@ellementul/uee-manager-client",
+  "version": "0.7.0",
   "description": "",
   "main": "index.js",
   "scripts": {
