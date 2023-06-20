@@ -1,6 +1,6 @@
 {
-  "name": "@ellementul/uee-manager",
-  "version": "0.9.7",
+  "name": "@ellementul/simple-uee-manager",
+  "version": "0.7.0",
   "description": "",
   "main": "index.js",
   "scripts": {
