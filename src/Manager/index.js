@@ -57,11 +57,11 @@ class Manager extends Member {
 
   reset() {
     for (let role in this._members) {
-      if (role !== this.getRole())
-        for (let [uuid, instance] of this._members[role].instances) {
-          if(typeof instance.reset == "function")
+      if (role !== this.getRole()) {
+        const instance = this._members[role].instance
+        if(typeof instance.reset == "function")
             instance.reset()
-        }
+      }
     }
   }
 }
