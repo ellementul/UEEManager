@@ -14,7 +14,12 @@ class Manager extends Member {
 
     if (
       roles.some(
-        ({role, memberConstructor}) => typeof memberConstructor !==  "function"
+        (memberConstructor) => {
+          if(typeof memberConstructor === "object")
+            memberConstructor = memberConstructor.memberConstructor
+          
+          return typeof memberConstructor !==  "function"
+        }
       )
     ) throw TypeError("A member constructor isn't function!")
 
@@ -35,7 +40,17 @@ class Manager extends Member {
     if(!this._provider)
       throw new TypeError("The manger doesn't have provider!")
 
-    this._roles.forEach(({role, memberConstructor }) => { 
+    this._roles.forEach((memberConstructor) => {
+      let role = null
+      if(typeof memberConstructor === "object") {
+        role = memberConstructor.role
+        memberConstructor = memberConstructor.memberConstructor
+      }
+      else {
+        role = memberConstructor.name
+      }
+      
+      memberConstructor.role = role
       this._members[role] = { memberConstructor }
       this.createMember({ manager: this.uuid, role })
     })
@@ -47,7 +62,7 @@ class Manager extends Member {
 
     const memberConstructor = this._members[role].memberConstructor
     const member = new memberConstructor
-    member.role = role
+    member.role |= memberConstructor.role
     member.setProvider(this._provider)
     this._members[role].uuid = member.uuid
     this._members[role].instance = member
